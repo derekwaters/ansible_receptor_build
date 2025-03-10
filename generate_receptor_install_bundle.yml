@@ -1,0 +1,75 @@
+---
+- name: Generate an execution node receptor install bundle
+  hosts: localhost
+  gather_facts: no
+  vars:
+    execution_node_hostname: testexec
+    input_folder: /home/awx/
+    output_folder: /var/tmp/receptor_install_bundle
+    signing_temp_path: /var/tmp/
+
+  tasks:
+    - name: Copy the mesh CA certificate to the output folder
+      copy:
+        src: "{{ input_folder }}/aap/tls/ca.crt"
+        dest: "{{ output_folder }}/receptor/tls/ca/mesh-CA.crt"
+
+    - name: Copy the public key for work signing to the output folder
+      copy:
+        src: "{{ input_folder }}/aap/receptor/etc/signing-public.pem"
+        dest: "{{ output_folder }}/receptor/work_public_key.pem"
+
+
+    - name: Generate a private signing key for the receptor
+      community.crypto.openssl_privatekey:
+        path: "{{ signing_temp_path }}/receptor.key"
+        size: 2048
+        type: RSA
+
+    - name: Generate a certificate signing request for the receptor
+      community.crypto.openssl_csr:
+        path: "{{ signing_temp_path }}/receptor.csr"
+        privatekey_path: "{{ signing_temp_path }}/receptor.key"
+        common_name: "{{ execution_node_hostname }}"
+        subject_alt_name:
+          - "DNS:{{ execution_node_hostname }}"
+          - "otherName:1.3.6.1.4.1.2312.19.1;UTF8:{{ execution_node_hostname }}"
+        subject_alt_name_critical: false
+
+    - name: Generate a certificate from the csr for the receptor
+      community.crypto.x509_certificate:
+        path: "{{ signing_temp_path }}/receptor.crt"
+        csr_path: "{{ signing_temp_path }}/receptor.csr"
+        ownca_path: "{{ input_folder }}/aap/tls/ca.crt"
+        ownca_privatekey_path: "{{ input_folder }}/aap/tls/ca.key"
+        provider: ownca
+
+    - name: Copy the receptor key to the output folder
+      copy:
+        src: "{{ signing_temp_path }}/receptor.key"
+        dest: "{{ output_folder }}/receptor/tls/receptor.key"
+
+    - name: Copy the receptor cert to the output folder
+      copy:
+        src: "{{ signing_temp_path }}/receptor.crt"
+        dest: "{{ output_folder }}/receptor/tls/receptor.crt"
+
+    - name: Generate the install_receptor playbook
+      template:
+        src: templates/install_receptor.j2
+        dest: "{{ output_folder }}/install_receptor.yml"
+
+    - name: Generate the inventory file
+      template:
+        src: templates/inventory.j2
+        dest: "{{ output_folder }}/inventory.yml"
+
+    - name: Generate the group_vars file
+      template:
+        src: templates/group_vars.j2
+        dest: "{{ output_folder }}/group_vars/all.yml"
+
+    - name: Generate the requirements file
+      template:
+        src: templates/requirements.j2
+        dest: "{{ output_folder }}/requirements.yml"
