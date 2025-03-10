@@ -4,9 +4,9 @@
   tasks:
     - name: Create the receptor user
       user:
-{% verbatim %}
+{% raw %}
         name: "{{ receptor_user }}"
-{% endverbatim %}
+{% endraw %}
         shell: /bin/bash
 {% if instance.node_type == "execution" %}
     - import_role:

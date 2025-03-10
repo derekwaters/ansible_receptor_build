@@ -31,7 +31,7 @@ receptor_peers:
     protocol: {{ peer.protocol }}
 {% endfor %}
 {% endif %}
-{% verbatim %}
+{% raw %}
 podman_user: "{{ receptor_user }}"
 podman_group: "{{ receptor_group }}"
-{% endverbatim %}
+{% endraw %}

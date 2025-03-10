@@ -9,14 +9,26 @@
     signing_temp_path: /var/tmp/
 
   tasks:
+    - name: Create the relevant paths if they don't exist
+      ansible.builtin.file:
+        path: "{{ output_folder }}/receptor/tls/ca/"
+        state: directory
+        mode: '0755'
+
+    - name: Create the relevant paths if they don't exist
+      ansible.builtin.file:
+        path: "{{ output_folder }}/group_vars/"
+        state: directory
+        mode: '0755'
+
     - name: Copy the mesh CA certificate to the output folder
-      copy:
-        src: "{{ input_folder }}/aap/tls/ca.crt"
+      ansible.builtin.copy:
+        src: "{{ input_folder }}/aap/tls/ca.cert"
         dest: "{{ output_folder }}/receptor/tls/ca/mesh-CA.crt"
 
     - name: Copy the public key for work signing to the output folder
-      copy:
-        src: "{{ input_folder }}/aap/receptor/etc/signing-public.pem"
+      ansible.builtin.copy:
+        src: "{{ input_folder }}/aap/receptor/etc/signing_public.pem"
         dest: "{{ output_folder }}/receptor/work_public_key.pem"
 
 
@@ -40,36 +52,45 @@
       community.crypto.x509_certificate:
         path: "{{ signing_temp_path }}/receptor.crt"
         csr_path: "{{ signing_temp_path }}/receptor.csr"
-        ownca_path: "{{ input_folder }}/aap/tls/ca.crt"
+        ownca_path: "{{ input_folder }}/aap/tls/ca.cert"
         ownca_privatekey_path: "{{ input_folder }}/aap/tls/ca.key"
         provider: ownca
 
     - name: Copy the receptor key to the output folder
-      copy:
+      ansible.builtin.copy:
         src: "{{ signing_temp_path }}/receptor.key"
         dest: "{{ output_folder }}/receptor/tls/receptor.key"
 
     - name: Copy the receptor cert to the output folder
-      copy:
+      ansible.builtin.copy:
         src: "{{ signing_temp_path }}/receptor.crt"
         dest: "{{ output_folder }}/receptor/tls/receptor.crt"
 
     - name: Generate the install_receptor playbook
-      template:
+      ansible.builtin.template:
         src: templates/install_receptor.j2
         dest: "{{ output_folder }}/install_receptor.yml"
+      vars:
+        instance:
+          node_type: execution
 
     - name: Generate the inventory file
-      template:
+      ansible.builtin.template:
         src: templates/inventory.j2
         dest: "{{ output_folder }}/inventory.yml"
+      vars:
+        instance:
+          hostname: "{{ execution_node_hostname }}"
 
     - name: Generate the group_vars file
-      template:
+      ansible.builtin.template:
         src: templates/group_vars.j2
         dest: "{{ output_folder }}/group_vars/all.yml"
+      vars:
+        instance:
+          node_type: execution
 
     - name: Generate the requirements file
-      template:
+      ansible.builtin.template:
         src: templates/requirements.j2
         dest: "{{ output_folder }}/requirements.yml"
