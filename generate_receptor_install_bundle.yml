@@ -2,13 +2,25 @@
 - name: Generate an execution node receptor install bundle
   hosts: localhost
   gather_facts: no
-  vars:
-    execution_node_hostname: testexec
-    input_folder: /home/awx/
-    output_folder: /var/tmp/receptor_install_bundle
-    signing_temp_path: /var/tmp/
+  #vars:
+  #  controller_node_hostname: controller
+  #  execution_node_hostname: testexec
+  #  input_folder: /home/awx/
+  #  output_folder: /var/tmp/receptor_install_bundle
+  #  signing_temp_path: /var/tmp/
 
   tasks:
+    - name: Validate required parameters
+      ansible.builtin.assert:
+        that:
+          - controller_node_hostname | default("", true) | length > 0
+          - execution_node_hostname | default("", true) | length > 0
+          - input_folder | default("", true) | length > 0
+          - output_folder | default("", true) | length > 0
+          - signing_temp_path | default("", true) | length > 0
+        quiet: true
+        fail_msg: controller_node_hostname, execution_node_hostname, input_folder, output_folder and signing_temp_path must be provided
+
     - name: Create the relevant paths if they don't exist
       ansible.builtin.file:
         path: "{{ output_folder }}/receptor/tls/ca/"
@@ -89,6 +101,11 @@
       vars:
         instance:
           node_type: execution
+        listener_port: false
+        peers:
+          - address: "{{ controller_node_hostname }}"
+            protocol: tls
+            port: 27199
 
     - name: Generate the requirements file
       ansible.builtin.template:
