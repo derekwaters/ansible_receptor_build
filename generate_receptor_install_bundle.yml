@@ -103,9 +103,8 @@
           node_type: execution
         listener_port: false
         peers:
-          - address: "{{ controller_node_hostname }}"
-            protocol: tls
-            port: 27199
+          - address: "{{ controller_node_hostname }}:27199"
+            protocol: tcp
 
     - name: Generate the requirements file
       ansible.builtin.template:
