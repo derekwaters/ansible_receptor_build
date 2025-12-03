@@ -39,8 +39,8 @@
 
 - And ensuring that the new node is displayed.
 
-- Finally, on the execution node, create the execution instance by running:
+- Finally, on the controller node, create the execution instance by running:
 
-    `podman exec automation-controller-task awx-manage provision_instance --hostname remotehostname --node_type execution`
+    `podman exec automation-controller-task awx-manage provision_instance --hostname <remotehostname> --node_type execution`
 
 - After a period of a few minutes to run health checks, check the instance status in the AAP console.
