@@ -27,7 +27,14 @@
     In the output folder, a series of certs and yaml files will be created. Review them for correctness, then zip up the contents and transfer (using whatever secure mechanism is available) to your execution node.
 - On the execution node:
 - Unzip the bundle
-- Execute the receptor_install.yml playbook with the provided inventory
+- Install the requirements:
+
+    `ansible-galaxy collection install -r requirements.yml`
+
+- Execute the install playbook with the provided inventory
+
+    `ansible-playbook -i inventory.yml -K install_receptor.yml`
+
 - Ensure the install runs correctly.
 - Check the receptor status with:
 
