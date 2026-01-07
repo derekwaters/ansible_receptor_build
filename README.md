@@ -44,6 +44,10 @@
 
     `podman exec receptor receptorctl status`
 
+  Note that in later versions of AAP (2.6-3) receptorctl is no longer bundled in the receptor container. In which case you can run it from a controller node:
+
+    `podman exec automation-controller-web /var/lib/awx/venv/awx/bin/receptorctl --socket /run/receptor/receptor.sock status`
+
 - And ensuring that the new node is displayed.
 
 - Finally, on the controller node, create the execution instance by running:
